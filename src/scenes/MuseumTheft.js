@@ -1,8 +1,5 @@
 import SCENES from "../config/gameConstants.js";
 
-var cursors;
-var pauseFlag = false;
-
 class MuseumTheft extends Phaser.Scene {
     constructor() {
         super({ key: SCENES.MUSEUM_THEFT });
@@ -52,15 +49,8 @@ class MuseumTheft extends Phaser.Scene {
 
         this.anims.create({
             key: 'portal_open',
-            frames: this.anims.generateFrameNumbers('portal', { start: 0, end: 3}),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('character', { start: 0, end: 9 }),
-            frameRate: 15,
+            frames: this.anims.generateFrameNumbers('portal', { start: 0, end: 0 }),
+            frameRate: 90,
             repeat: -1
         });
 
@@ -77,16 +67,9 @@ class MuseumTheft extends Phaser.Scene {
             frameRate: 15,
             repeat: -1
         });
-
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('character', { start: 23, end: 32 }),
-            frameRate: 15,
-            repeat: -1
-        });
     
-        this.player = this.physics.add.sprite(188, 190, 'character');
-        this.director = this.physics.add.sprite(30, 190, 'director');
+        this.player = this.physics.add.sprite(400, 190, 'character');
+        this.director = this.physics.add.sprite(20, 190, 'director');
         this.gangster = this.physics.add.sprite(750, 200, 'gangster');
         this.portal = this.physics.add.sprite(900, 200, 'portal');
     
@@ -98,9 +81,7 @@ class MuseumTheft extends Phaser.Scene {
         this.player.setCollideWorldBounds(true);
         this.director.setCollideWorldBounds(true);
         this.portal.setCollideWorldBounds(true);
-        this.gangster.setCollideWorldBounds(true)
-    
-        cursors = this.input.keyboard.createCursorKeys();
+        this.gangster.setCollideWorldBounds(true);
 
         this.physics.add.collider(this.player, floor);
         this.physics.add.collider(this.director, floor);
@@ -114,27 +95,11 @@ class MuseumTheft extends Phaser.Scene {
     }
 
     update() {
-        if (this.endSceneFlag) {
-            this.cameras.main.fadeOut(1000); 
-            this.cameras.main.once('camerafadeoutcomplete', () => {
-                this.scene.start(SCENES.MUSEUM_THEFT);  // Transition to next scene
-            });
-        }
 
         this.director.anims.play('director_idle_right', true);
         this.gangster.anims.play('gangster_idle', true);
         this.portal.anims.play('portal_open', true);
-
-        if (cursors.left.isDown && !pauseFlag) {
-            this.player.setVelocityX(-160);
-            this.player.anims.play('left', true);
-        } else if (cursors.right.isDown && !pauseFlag) {
-            this.player.setVelocityX(160);
-            this.player.anims.play('right', true);
-        } else {
-            this.player.setVelocityX(0);
-            this.player.anims.play('detective_idle', true);
-        }
+        this.player.anims.play('detective_idle', true);
     }
 
     createUI() {
@@ -152,18 +117,28 @@ class MuseumTheft extends Phaser.Scene {
             fontFamily: 'Arial',
             fontSize: '15px',
             color: '#000',
-            wordWrap: { width: 700, useAdvancedWrap: true } // Adjust width for better word wrapping
+            wordWrap: { width: 700, useAdvancedWrap: true }
         });
         const dialogSequence = [
-            { speaker: "Detective", content: "It's worse than we thought. I've been tracking this organization for months now. They're not just after relics—they're after time itself." },
-            { speaker: "Museum Manager", content: "Time? What do you mean, detective?" },
-            { speaker: "Detective", content: "These aren't random thefts. They’ve been targeting museums all over the world, stealing artifacts from key historical periods. They use them to open time portals—jumping back to the past to steal even more valuable relics from those eras. What’s valuable in the past becomes priceless in the present." },
-            { speaker: "Museum Manager", content: "That’s impossible! You're telling me they can... time travel?!" },
-            { speaker: "Detective", content: "Exactly. And they’re getting bolder. We need to stop them before they rewrite history for their own gain." }
-        ];
+            { speaker: "Detective", content: "It’s over! You can’t outrun us this time. Put the artifact down." },
+            { speaker: "Thief", content: "Oh, detective... you're always two steps behind. This artifact is the key to a new timeline—one where you never existed." },
+            { speaker: "Museum Director", content: "You can’t just rewrite history! You don’t know what damage you’ll cause!" },
+            { speaker: "Thief", content: "Damage? No, Director. What I’m about to do is evolution—reshaping history in our favor. And there’s nothing you can do to stop me." },
+            { speaker: "Detective", content: "You think you can control time? It doesn’t work that way. Change one thing, and the entire world could unravel." },
+            { speaker: "Thief", content: "That’s the idea, detective. Out with the old, in with the new. And thanks to this little relic, I’m in charge now." },
+            { speaker: "Museum Director", content: "You’re risking everything—for what? Greed? Power? It’ll collapse on you!" },
+            { speaker: "Thief", content: "Power is the only thing that matters. And by the time you realize that... I’ll be rewriting the past." },
+            { speaker: "Detective", content: "No! Stop—!" },
+            { speaker: "Thief", content: "Too late, detective. Enjoy watching history fade away!" },
+            { speaker: "Narrator", content: "With a flash of light, the thief vanishes, leaving the detective and the director standing helplessly as the portal to the past closes." },
+            { speaker: "Detective", content: "Damn it! We’re too late... they’re already gone." },
+            { speaker: "Museum Director", content: "What do we do now?" },
+            { speaker: "Detective", content: "We track them down... no matter where—or when—they are." }
+        ];        
 
         this.showDialogSequence(dialogText, dialogSequence, 0);
     }
+
     showDialogSequence(textObject, sequence, index) {
         if (index < sequence.length) {
             const currentDialog = sequence[index];
@@ -176,7 +151,7 @@ class MuseumTheft extends Phaser.Scene {
                 this.showDialogSequence(textObject, sequence, index + 1);
             }, dialogContent.length * 50 + 2000);  // Adjust the delay time based on the text length
         } else {
-            this.endSceneFlag = true; // Resume the game after the dialog ends
+            this.endScene() // Resume the game after the dialog ends
         }
     }
 
@@ -191,6 +166,13 @@ class MuseumTheft extends Phaser.Scene {
             },
             repeat: content.length - 1,
             delay: speed
+        });
+    }
+
+    endScene() {
+        this.cameras.main.fadeOut(1000); 
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start(SCENES.HARRAPA_START);  // Transition to next scene
         });
     }
 }

@@ -6,9 +6,13 @@ var pauseFlag = false;
 class MuseumScene extends Phaser.Scene {
     constructor() {
         super({ key: SCENES.MUSEUM_SCENE });
-        this.dialogDisplayed = false; // Ensure dialog appears only once
-        this.textFlag = false; // To control when the game should pause for dialog
+        this.dialogDisplayed = false;
+        this.textFlag = false;
         this.endSceneFlag = false;
+        this.currentDialogueIndex = 0;
+        this.typingEvent = null;
+        this.isTyping = false;
+
     }
 
     preload() {
@@ -73,6 +77,24 @@ class MuseumScene extends Phaser.Scene {
 
         this.player.setCollideWorldBounds(true);
         this.director.setCollideWorldBounds(true);
+
+        this.director.setInteractive({
+            useHandCursor: true,
+            hitArea: new Phaser.Geom.Ellipse(this.director.width / 2, this.director.height / 2, 90, 110),
+            hitAreaCallback: Phaser.Geom.Ellipse.Contains
+        });
+
+        this.director.on('pointerdown', () => {
+            if (this.dialogDisplayed && this.isTyping) {
+                this.skipCurrentDialogue();
+            } else if (!this.dialogDisplayed) {
+                this.dialogDisplayed = true;
+                this.createDialogBox();
+                pauseFlag = true;
+            } else {
+                this.nextDialogue();
+            }
+        });
     
         cursors = this.input.keyboard.createCursorKeys();
 
@@ -115,17 +137,15 @@ class MuseumScene extends Phaser.Scene {
     }
 
     createDialogBox() {
-        this.add.image(120, 460, 'dialogBox').setOrigin(0);
-
-        const dialogText = this.add.text(140, 470, "", {
+        this.dialogBox = this.add.image(120, 460, 'dialogBox').setOrigin(0);
+        this.dialogText = this.add.text(140, 470, "", {
             fontFamily: 'Arial',
             fontSize: '15px',
             color: '#000',
-            wordWrap: { width: 700, useAdvancedWrap: true } // Adjust width for better word wrapping
+            wordWrap: { width: 700, useAdvancedWrap: true }
         });
 
-        // Array of dialog lines to be displayed in sequence
-        const dialogSequence = [
+        this.dialogSequence = [
             { speaker: "Detective", content: "It's worse than we thought. I've been tracking this organization for months now. They're not just after relics—they're after time itself." },
             { speaker: "Museum Manager", content: "Time? What do you mean, detective?" },
             { speaker: "Detective", content: "These aren't random thefts. They’ve been targeting museums all over the world, stealing artifacts from key historical periods. They use them to open time portals—jumping back to the past to steal even more valuable relics from those eras. What’s valuable in the past becomes priceless in the present." },
@@ -133,7 +153,7 @@ class MuseumScene extends Phaser.Scene {
             { speaker: "Detective", content: "Exactly. And they’re getting bolder. We need to stop them before they rewrite history for their own gain." }
         ];
 
-        this.showDialogSequence(dialogText, dialogSequence, 0);
+        this.showDialogSequence(this.dialogText, this.dialogSequence, this.currentDialogueIndex);
     }
 
     showDialogSequence(textObject, sequence, index) {
@@ -151,6 +171,31 @@ class MuseumScene extends Phaser.Scene {
             this.dialogDisplayed = false;
             this.endScene();
         }
+    }
+
+    nextDialogue() {
+        // Move to the next dialogue if available
+        this.currentDialogueIndex++;
+        if (this.currentDialogueIndex < this.dialogSequence.length) {
+            this.showDialogSequence(this.dialogText, this.dialogSequence, this.currentDialogueIndex);
+        } else {
+            // End dialog and resume gameplay
+            this.dialogBox.destroy();
+            this.dialogText.destroy();
+            this.dialogDisplayed = false;
+            pauseFlag = false;
+
+            this.endScene();
+        }
+    }
+
+    skipCurrentDialogue() {
+        // Immediately display the entire current text and stop the typing animation
+        this.typingEvent.remove();
+        const currentDialog = this.dialogSequence[this.currentDialogueIndex];
+        const dialogContent = `${currentDialog.speaker}: ${currentDialog.content}`;
+        this.dialogText.setText(dialogContent);
+        this.isTyping = false; // Text is fully displayed now
     }
 
     typeText(textObject, content, speed) {

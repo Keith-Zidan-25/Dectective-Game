@@ -6,12 +6,14 @@ import InventoryScene from '../scenes/Inventory.js';
 import GameOverScene from '../scenes/GameOver.js';
 import MuseumScene from '../scenes/MuseumDirector.js';
 import MuseumTheft from '../scenes/MuseumTheft.js';
+import HarappaStart from '../scenes/Harappastart.js';
+import MarketplaceScene from '../scenes/MarketplaceScene.js';
 
 const config = {
     type: Phaser.AUTO,
     parent: 'game',
     width: 1000,
-    height: 600,
+    height: 700,
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
@@ -31,7 +33,9 @@ const config = {
         InventoryScene,
         GameOverScene,
         MuseumScene,
-        MuseumTheft
+        MuseumTheft,
+        HarappaStart,
+        MarketplaceScene,
     ]
 };
 

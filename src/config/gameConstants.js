@@ -7,6 +7,8 @@ const SCENES = {
   GAME_OVER: 'GameOverScene',
   MUSEUM_SCENE: 'MuseumScene',
   MUSEUM_THEFT: 'MuseumTheft',
+  HARRAPA_START: 'HarrapaStart',
+  MARKETPLACE_GAME: 'MarketPlaceGame'
 };
 
 export default SCENES;
