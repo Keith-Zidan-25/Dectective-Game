@@ -3,12 +3,21 @@ import SCENES from "../config/gameConstants.js";
 var cursors;
 var pauseFlag = false;
 
-class HarappaStart extends Phaser.Scene {
+class MerchantScene extends Phaser.Scene{
     constructor() {
-        super({ key: SCENES.HARRAPA_START });
-        this.sceneTrigger = false;
+        super({ key: SCENES.MERCHANT_SCENE });
     }
+
     preload() {
+        this.load.spritesheet('character', 'assets/images/characters/detective.png', {
+            frameWidth: 128, 
+            frameHeight: 128 
+        });
+        this.load.spritesheet('merchant', 'assets/images/characters/merchant.png', {
+            frameWidth: 32, 
+            frameHeight: 32 
+        });
+        
         this.load.image('background-harrapa', 'assets/images/backgrounds/Harrapa-Start.png');
         this.load.image('harappa-base-platform', 'assets/images/backgrounds/harappa_platfrom.png');
         this.load.image('dialogBox', 'assets/images/ui/dialogBox.png');
@@ -47,22 +56,35 @@ class HarappaStart extends Phaser.Scene {
             repeat: -1
         });
 
+        this.anims.create({
+            key: 'merchant_idle',
+            frames: this.anims.generateFrameNumbers('merchant', { start: 0, end: 5 }),
+            frameRate: 15,
+            repeat: -1
+        });
+
         this.player = this.physics.add.sprite(200, 190, 'character');
+        this.merchant = this.physics.add.sprite(700, 190, 'merchant');
+
         this.player.setScale(3);
+        this.merchant.setScale(4);
+
         this.player.setCollideWorldBounds(true);
+        this.merchant.setCollideWorldBounds(true);
 
         cursors = this.input.keyboard.createCursorKeys();
 
         this.physics.add.collider(this.player, floor);
+        this.physics.add.collider(this.merchant, floor);
 
         this.cameras.main.fadeIn(1000);
-
-        this.createDialogBox();
     }
     update() {
+        this.merchant.anims.play('merchant_idle', true);
+
         if (this.player.x > 600 && !this.sceneTrigger) {
-            this.sceneTrigger = true
-            this.endScene();
+            this.sceneTrigger = true;
+            this.createDialogBox();
         }
         if (cursors.left.isDown && !pauseFlag) {
             this.player.setVelocityX(-160);
@@ -76,6 +98,7 @@ class HarappaStart extends Phaser.Scene {
         }
     }
     createDialogBox() {
+        pauseFlag = true;
         this.add.image(120, 560, 'dialogBox').setOrigin(0);
 
         const dialogText = this.add.text(140, 570, "", {
@@ -109,7 +132,8 @@ class HarappaStart extends Phaser.Scene {
                 this.showDialogSequence(textObject, sequence, index + 1);
             }, dialogContent.length * 50 + 2000);  // Adjust the delay time based on the text length
         } else {
-            pauseFlag = false; // Resume the game after the dialog ends
+            pauseFlag = false;
+            this.endScene(); // Resume the game after the dialog ends
         }
     }
 
@@ -126,12 +150,13 @@ class HarappaStart extends Phaser.Scene {
             delay: speed
         });
     }
+
     endScene() {
         this.cameras.main.fadeOut(1000); 
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start(SCENES.MERCHANT_SCENE);  // Transition to next scene
+            this.scene.start(SCENES.MARKETPLACE_GAME);  // Transition to next scene
         });
     }
 }
 
-export default HarappaStart;
+export default MerchantScene;

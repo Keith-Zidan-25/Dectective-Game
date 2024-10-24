@@ -8,6 +8,7 @@ import MuseumScene from '../scenes/MuseumDirector.js';
 import MuseumTheft from '../scenes/MuseumTheft.js';
 import HarappaStart from '../scenes/Harappastart.js';
 import MarketplaceScene from '../scenes/MarketplaceScene.js';
+import MerchantScene from '../scenes/MerchantScene.js';
 
 const config = {
     type: Phaser.AUTO,
@@ -36,6 +37,7 @@ const config = {
         MuseumTheft,
         HarappaStart,
         MarketplaceScene,
+        MerchantScene,
     ]
 };
 

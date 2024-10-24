@@ -8,7 +8,8 @@ const SCENES = {
   MUSEUM_SCENE: 'MuseumScene',
   MUSEUM_THEFT: 'MuseumTheft',
   HARRAPA_START: 'HarrapaStart',
-  MARKETPLACE_GAME: 'MarketPlaceGame'
+  MARKETPLACE_GAME: 'MarketPlaceGame',
+  MERCHANT_SCENE: 'MerchantScene'
 };
 
 export default SCENES;
