@@ -9,7 +9,8 @@ const SCENES = {
   MUSEUM_THEFT: 'MuseumTheft',
   HARRAPA_START: 'HarrapaStart',
   MARKETPLACE_GAME: 'MarketPlaceGame',
-  MERCHANT_SCENE: 'MerchantScene'
+  MERCHANT_SCENE: 'MerchantScene',
+  HARAPPA2_SCENE: 'Harappa2'
 };
 
 export default SCENES;

@@ -4,6 +4,8 @@ class MuseumTheft extends Phaser.Scene {
     constructor() {
         super({ key: SCENES.MUSEUM_THEFT });
         this.endSceneFlag = false;
+        this.dialogIndex = 0;
+        this.typingComplete = false;
     }
 
     preload() {
@@ -92,10 +94,14 @@ class MuseumTheft extends Phaser.Scene {
     
         this.createUI();
         this.createDialogBox();
+
+        // Click event to skip typing animation
+        this.input.on('pointerdown', () => {
+            this.skipTypingAnimation();
+        });
     }
 
     update() {
-
         this.director.anims.play('director_idle_right', true);
         this.gangster.anims.play('gangster_idle', true);
         this.portal.anims.play('portal_open', true);
@@ -113,13 +119,14 @@ class MuseumTheft extends Phaser.Scene {
     createDialogBox() {
         this.add.image(120, 460, 'dialogBox').setOrigin(0);
 
-        const dialogText = this.add.text(140, 470, "", {
+        this.dialogText = this.add.text(140, 470, "", {
             fontFamily: 'Arial',
             fontSize: '15px',
             color: '#000',
             wordWrap: { width: 700, useAdvancedWrap: true }
         });
-        const dialogSequence = [
+        
+        this.dialogSequence = [
             { speaker: "Detective", content: "It’s over! You can’t outrun us this time. Put the artifact down." },
             { speaker: "Thief", content: "Oh, detective... you're always two steps behind. This artifact is the key to a new timeline—one where you never existed." },
             { speaker: "Museum Director", content: "You can’t just rewrite history! You don’t know what damage you’ll cause!" },
@@ -134,24 +141,35 @@ class MuseumTheft extends Phaser.Scene {
             { speaker: "Detective", content: "Damn it! We’re too late... they’re already gone." },
             { speaker: "Museum Director", content: "What do we do now?" },
             { speaker: "Detective", content: "We track them down... no matter where—or when—they are." }
-        ];        
+        ];
 
-        this.showDialogSequence(dialogText, dialogSequence, 0);
+        this.showDialogSequence(this.dialogSequence, 0);
     }
 
-    showDialogSequence(textObject, sequence, index) {
+    showDialogSequence(sequence, index) {
         if (index < sequence.length) {
+            this.dialogIndex = index;
+            this.typingComplete = false;
             const currentDialog = sequence[index];
             const dialogContent = `${currentDialog.speaker}: ${currentDialog.content}`;
 
-            this.typeText(textObject, dialogContent, 50);
-
-            // Set a delay to show the next dialogue after a short pause
-            setTimeout(() => {
-                this.showDialogSequence(textObject, sequence, index + 1);
-            }, dialogContent.length * 50 + 2000);  // Adjust the delay time based on the text length
+            this.typeText(this.dialogText, dialogContent, 50);
         } else {
-            this.endScene() // Resume the game after the dialog ends
+            this.endScene();
+        }
+    }
+
+    skipTypingAnimation() {
+        if (!this.typingComplete) {
+            this.typingComplete = true;
+            this.time.removeAllEvents();
+            this.dialogText.setText(this.dialogSequence[this.dialogIndex].speaker + ": " + this.dialogSequence[this.dialogIndex].content);
+        } else {
+            if (this.dialogIndex < this.dialogSequence.length - 1) {
+                this.showDialogSequence(this.dialogSequence, this.dialogIndex + 1);
+            } else {
+                this.endScene();
+            }
         }
     }
 
@@ -163,6 +181,9 @@ class MuseumTheft extends Phaser.Scene {
             callback: () => {
                 textObject.setText(content.substr(0, i));
                 i++;
+                if (i === content.length) {
+                    this.typingComplete = true;
+                }
             },
             repeat: content.length - 1,
             delay: speed

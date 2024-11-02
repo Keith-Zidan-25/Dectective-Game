@@ -7,12 +7,8 @@ class MuseumScene extends Phaser.Scene {
     constructor() {
         super({ key: SCENES.MUSEUM_SCENE });
         this.dialogDisplayed = false;
-        this.textFlag = false;
-        this.endSceneFlag = false;
-        this.currentDialogueIndex = 0;
-        this.typingEvent = null;
-        this.isTyping = false;
-
+        this.dialogIndex = 0;
+        this.typingComplete = false;
     }
 
     preload() {
@@ -33,7 +29,6 @@ class MuseumScene extends Phaser.Scene {
 
         const floor = this.physics.add.staticGroup();
         const platformWidth = this.textures.get('museum-floor-platform').getSourceImage().width;
-
         const sceneWidth = this.scale.width;
         const numPlatforms = Math.ceil(sceneWidth / platformWidth);
     
@@ -77,24 +72,6 @@ class MuseumScene extends Phaser.Scene {
 
         this.player.setCollideWorldBounds(true);
         this.director.setCollideWorldBounds(true);
-
-        this.director.setInteractive({
-            useHandCursor: true,
-            hitArea: new Phaser.Geom.Ellipse(this.director.width / 2, this.director.height / 2, 90, 110),
-            hitAreaCallback: Phaser.Geom.Ellipse.Contains
-        });
-
-        this.director.on('pointerdown', () => {
-            if (this.dialogDisplayed && this.isTyping) {
-                this.skipCurrentDialogue();
-            } else if (!this.dialogDisplayed) {
-                this.dialogDisplayed = true;
-                this.createDialogBox();
-                pauseFlag = true;
-            } else {
-                this.nextDialogue();
-            }
-        });
     
         cursors = this.input.keyboard.createCursorKeys();
 
@@ -104,13 +81,19 @@ class MuseumScene extends Phaser.Scene {
         this.cameras.main.fadeIn(1000);
     
         this.createUI();
+
+        // Click event to skip typing animation
+        this.input.on('pointerdown', () => {
+            if (pauseFlag) {
+                this.skipTypingAnimation();
+            }
+        });
     }
 
     update() {
-
         this.director.anims.play('director_idle', true);
 
-        // Trigger dialog when player is near the director and dialog hasn't been displayed yet
+        // Trigger dialog when player is near the director
         if (Math.abs(this.director.x - this.player.x) <= 150 && !this.dialogDisplayed) {
             this.dialogDisplayed = true;
             this.createDialogBox();
@@ -137,7 +120,8 @@ class MuseumScene extends Phaser.Scene {
     }
 
     createDialogBox() {
-        this.dialogBox = this.add.image(120, 460, 'dialogBox').setOrigin(0);
+        this.add.image(120, 460, 'dialogBox').setOrigin(0);
+
         this.dialogText = this.add.text(140, 470, "", {
             fontFamily: 'Arial',
             fontSize: '15px',
@@ -153,59 +137,49 @@ class MuseumScene extends Phaser.Scene {
             { speaker: "Detective", content: "Exactly. And they’re getting bolder. We need to stop them before they rewrite history for their own gain." }
         ];
 
-        this.showDialogSequence(this.dialogText, this.dialogSequence, this.currentDialogueIndex);
+        this.showDialogSequence(this.dialogSequence, 0);
     }
 
-    showDialogSequence(textObject, sequence, index) {
+    showDialogSequence(sequence, index) {
         if (index < sequence.length) {
+            this.dialogIndex = index;
+            this.typingComplete = false;
             const currentDialog = sequence[index];
             const dialogContent = `${currentDialog.speaker}: ${currentDialog.content}`;
 
-            this.typeText(textObject, dialogContent, 50);
-
-            // Set a delay to show the next dialogue after a short pause
-            setTimeout(() => {
-                this.showDialogSequence(textObject, sequence, index + 1);
-            }, dialogContent.length * 50 + 2000);  // Adjust the delay time based on the text length
+            this.typeText(this.dialogText, dialogContent, 50);
         } else {
-            this.dialogDisplayed = false;
-            this.endScene();
-        }
-    }
-
-    nextDialogue() {
-        // Move to the next dialogue if available
-        this.currentDialogueIndex++;
-        if (this.currentDialogueIndex < this.dialogSequence.length) {
-            this.showDialogSequence(this.dialogText, this.dialogSequence, this.currentDialogueIndex);
-        } else {
-            // End dialog and resume gameplay
-            this.dialogBox.destroy();
-            this.dialogText.destroy();
-            this.dialogDisplayed = false;
             pauseFlag = false;
-
             this.endScene();
         }
     }
 
-    skipCurrentDialogue() {
-        // Immediately display the entire current text and stop the typing animation
-        this.typingEvent.remove();
-        const currentDialog = this.dialogSequence[this.currentDialogueIndex];
-        const dialogContent = `${currentDialog.speaker}: ${currentDialog.content}`;
-        this.dialogText.setText(dialogContent);
-        this.isTyping = false; // Text is fully displayed now
+    skipTypingAnimation() {
+        if (!this.typingComplete) {
+            this.typingComplete = true;
+            this.time.removeAllEvents();
+            this.dialogText.setText(this.dialogSequence[this.dialogIndex].speaker + ": " + this.dialogSequence[this.dialogIndex].content);
+        } else {
+            if (this.dialogIndex < this.dialogSequence.length - 1) {
+                this.showDialogSequence(this.dialogSequence, this.dialogIndex + 1);
+            } else {
+                pauseFlag = false;
+                this.endScene();
+            }
+        }
     }
 
     typeText(textObject, content, speed) {
         textObject.setText('');
         let i = 0;
-    
+
         this.time.addEvent({
             callback: () => {
                 textObject.setText(content.substr(0, i));
                 i++;
+                if (i === content.length) {
+                    this.typingComplete = true;
+                }
             },
             repeat: content.length - 1,
             delay: speed
@@ -215,7 +189,7 @@ class MuseumScene extends Phaser.Scene {
     endScene() {
         this.cameras.main.fadeOut(1000); 
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start(SCENES.MUSEUM_THEFT);  // Transition to next scene
+            this.scene.start(SCENES.MUSEUM_THEFT);
         });
     }
 }

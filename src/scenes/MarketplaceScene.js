@@ -81,7 +81,7 @@ class MarketplaceScene extends Phaser.Scene {
     endScene() {
         this.cameras.main.fadeOut(1000); 
         this.cameras.main.once('camerafadeoutcomplete', () => {
-            this.scene.start(SCENES.HARRAPA_START);  // Transition to next scene
+            this.scene.start(SCENES.HARAPPA2_SCENE);  // Transition to next scene
         });
     }
 }
